@@ -1,0 +1,16 @@
+# Secrets et fichiers sensibles
+.env
+.env.*
+*.key
+*.pem
+
+# Build / artefacts
+dist/
+build/
+node_modules/
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
