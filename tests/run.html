@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Tests — neurminator</title>
+  <link rel="stylesheet" href="../css/base.css">
+</head>
+<body>
+  <main id="tests" style="max-width:720px;margin:0 auto;padding:16px"></main>
+  <script type="module">
+    import { createRunner } from "./harness.js";
+    import { register as registerStorage } from "./storage.test.js";
+
+    const runner = createRunner();
+    registerStorage(runner);
+    runner.render(document.getElementById("tests"));
+  </script>
+</body>
+</html>
