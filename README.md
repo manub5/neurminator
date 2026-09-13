@@ -20,3 +20,13 @@ Ouvrir `./tests/run.html` dans le navigateur.
 
 Pousser sur la branche `main` du dépôt GitHub, activer GitHub Pages
 (Settings → Pages → Source : branche `main`, dossier `/`).
+
+## Icônes
+
+Les icônes fournies sont des SVG simples (`icons/`), exportés en PNG :
+- `icons/icon-192.png` (192×192)
+- `icons/icon-512.png` (512×512)
+- `icons/apple-touch-icon.png` (180×180)
+
+Pour les personnaliser, remplacer ces PNG (mêmes dimensions), ou
+modifier les SVG puis les ré-exporter.
