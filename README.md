@@ -62,3 +62,12 @@ Sans cela, les visiteurs restent sur l'ancienne version en cache.
 - [ ] L'écran de résultat affiche score, record et prochain niveau.
 - [ ] L'Historique montre la partie jouée.
 - [ ] L'accueil affiche un niveau mis à jour.
+
+### Palier D — Les 3 autres jeux
+
+- [ ] N-back : lettres + bouton « Correspond », 20 essais jugés.
+- [ ] Stroop : mot coloré, 4 boutons, choisir la couleur de l'encre.
+- [ ] Réaction : cercle après délai, simple puis choix.
+- [ ] Chaque jeu enregistre dans l'Historique et met à jour le niveau.
+- [ ] Le record de Réaction baisse (plus bas = mieux).
+- [ ] `tests/run.html` affiche 30 réussis, 0 échoués.
