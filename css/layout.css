@@ -40,3 +40,18 @@ body.playing #app-header { display: none; }
   border-radius: var(--radius);
   padding: var(--gap);
 }
+
+.settings-card { margin-bottom: var(--gap); }
+.settings-title { margin: 0 0 12px; color: var(--text-dim); font-size: 0.9rem; }
+.settings-options { display: flex; gap: 8px; }
+.settings-options button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.settings-help { color: var(--text-dim); font-size: 0.9rem; margin: 8px 0 0; }
+button.danger { background: var(--danger); color: #fff; }
