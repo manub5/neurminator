@@ -34,8 +34,8 @@ route ensuite le résultat vers `scoring` → `difficulty` → `storage`.
   2. Cases allumées une par une : 600 ms allumée, 250 ms d'intervalle. Ordre aléatoire,
      pas de répétition consécutive de la même case.
   3. Phase de rappel : grille neutre et cliquable ; chaque clic surligne brièvement la
-     case ; bouton « Valider » (actif dès le premier clic, valider une séquence
-     incomplète compte comme échec).
+     case. **Auto-validation** : la réponse est validée dès que l'utilisateur a cliqué
+     autant de cases que la longueur présentée (aucun bouton « Valider »).
   4. Feedback : séquence correcte affichée brièvement + indicateur réussite/échec.
 - Essai réussi → longueur +1 → nouvel essai.
 - **Premier essai échoué → fin de partie.**

@@ -21,13 +21,6 @@ export async function prepare(level, { container, onFinish }) {
   instruction.className = "span-instruction";
   container.appendChild(instruction);
   const grid = mount(container);
-  const actions = document.createElement("div");
-  actions.className = "span-actions";
-  const validate = document.createElement("button");
-  validate.type = "button";
-  validate.textContent = "Valider";
-  actions.appendChild(validate);
-  container.appendChild(actions);
 
   try {
     let length = startLevel;
@@ -37,7 +30,6 @@ export async function prepare(level, { container, onFinish }) {
       const sequence = randomSequence(length, { maxLength: MAX_LENGTH });
 
       instruction.textContent = "Observez la séquence…";
-      validate.disabled = true;
       grid.clear();
       await wait(READY_DURATION);
 
@@ -48,10 +40,14 @@ export async function prepare(level, { container, onFinish }) {
         await wait(GAP_DURATION);
       }
 
-      instruction.textContent = "Reproduisez la séquence, puis validez.";
-      validate.disabled = false;
+      instruction.textContent = "Reproduisez la séquence.";
       const answer = await new Promise((resolve) => {
         const picks = [];
+
+        function finish() {
+          grid.element.removeEventListener("click", onClick);
+          resolve(picks);
+        }
 
         function onClick(event) {
           const index = grid.cellIndexFromEvent(event);
@@ -61,19 +57,12 @@ export async function prepare(level, { container, onFinish }) {
           setTimeout(() => {
             if (grid.cells[index]) grid.cells[index].classList.remove("is-highlight");
           }, 150);
-        }
-
-        function onValidate() {
-          grid.element.removeEventListener("click", onClick);
-          validate.removeEventListener("click", onValidate);
-          resolve(picks);
+          if (picks.length >= sequence.length) finish();
         }
 
         grid.element.addEventListener("click", onClick);
-        validate.addEventListener("click", onValidate);
       });
 
-      validate.disabled = true;
       const correct =
         answer.length === sequence.length &&
         answer.every((value, i) => value === sequence[i]);

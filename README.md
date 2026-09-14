@@ -57,7 +57,7 @@ Sans cela, les visiteurs restent sur l'ancienne version en cache.
 
 - [ ] L'accueil ouvre le jeu Span.
 - [ ] La séquence s'allume case par case, puis la grille devient cliquable.
-- [ ] Valider une séquence complète donne un feedback.
+- [ ] La réponse se valide automatiquement après le bon nombre de clics (aucun bouton « Valider »).
 - [ ] La partie s'arrête au premier échec.
 - [ ] L'écran de résultat affiche score, record et prochain niveau.
 - [ ] L'Historique montre la partie jouée.
