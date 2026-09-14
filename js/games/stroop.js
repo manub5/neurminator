@@ -3,8 +3,9 @@ const COLORS = [
   { id: "vert", label: "Vert", css: "#4caf50" },
   { id: "bleu", label: "Bleu", css: "#4f8cff" },
   { id: "jaune", label: "Jaune", css: "#f2c94c" },
+  { id: "violet", label: "Violet", css: "#b06cff" },
+  { id: "orange", label: "Orange", css: "#ff9f43" },
 ];
-const WORDS = ["ROUGE", "VERT", "BLEU", "JAUNE"];
 const TOTAL_TRIALS = 24;
 
 function incongruentRatio(level) {
@@ -19,18 +20,26 @@ function wait(ms) {
 }
 
 export function buildTrial(incongruent) {
-  const wordIndex = Math.floor(Math.random() * WORDS.length);
+  const wordIndex = Math.floor(Math.random() * COLORS.length);
   let inkIndex = wordIndex;
   if (incongruent) {
     do {
       inkIndex = Math.floor(Math.random() * COLORS.length);
     } while (inkIndex === wordIndex);
   }
-  return { word: WORDS[wordIndex], ink: COLORS[inkIndex], incongruent };
+  return {
+    word: COLORS[wordIndex].label.toUpperCase(),
+    ink: COLORS[inkIndex],
+    incongruent,
+  };
 }
 
 export function incongruentRatioForLevel(level) {
   return incongruentRatio(level);
+}
+
+export function colorCount() {
+  return COLORS.length;
 }
 
 export async function prepare(level, { container, onFinish }) {

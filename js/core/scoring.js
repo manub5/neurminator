@@ -12,7 +12,7 @@ const RULES = {
     higherIsBetter: true,
   },
   reaction: {
-    extractScore: (raw) => raw.avgRt,
+    extractScore: (raw) => (raw.avgRt == null ? null : raw.avgRt),
     higherIsBetter: false,
   },
 };

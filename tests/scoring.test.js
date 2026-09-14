@@ -40,6 +40,11 @@ export function register({ suite, test }) {
       assertEqual(r.higherIsBetter, false);
     });
 
+    test("reaction avgRt null → score null (aucun essai correct)", () => {
+      const r = scoring.normalize("reaction", { avgRt: null });
+      assertEqual(r.score, null);
+    });
+
     test("nback total 0 ne divise pas par zéro", () => {
       const r = scoring.normalize("nback", { correct: 0, total: 0 });
       assertEqual(r.score, 0);

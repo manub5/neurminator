@@ -32,8 +32,9 @@ Réponse par essai :
 ## 3. Stroop (inhibition)
 
 - Un **mot de couleur** s'affiche, écrit dans une **couleur d'encre** qui peut différer.
-- 4 couleurs : rouge, vert, bleu, jaune. 4 gros boutons colorés (libellés).
-- L'utilisateur choisit la **couleur de l'encre** (pas le mot lu).
+- **6 couleurs** : rouge, vert, bleu, jaune, violet, orange. 6 boutons colorés (libellés).
+- L'utilisateur choisit la **couleur de l'encre** (pas le mot lu). L'encre est toujours
+  l'une des 6 couleurs (donc réponse possible).
 - Une partie = **24 essais**.
 - Score = **taux de bonnes réponses** (0–1), `higherIsBetter = true`.
 - Difficulté = proportion d'essais **incongruents** (mot ≠ encre) :
@@ -54,7 +55,9 @@ Réponse par essai :
   - niveau 2 : **choix 2** (taper le bon cercle parmi 2 couleurs).
   - niveau 3+ : **choix 4** (4 positions/couleurs).
 - Score = **temps de réaction moyen en ms** sur les essais corrects,
-  `higherIsBetter = false`. Si aucun essai correct, score = 0 (traité comme très mauvais).
+  `higherIsBetter = false`. Si aucun essai correct, **aucun score n'est enregistré**
+  (`avgRt = null`) : ni historique, ni record, ni changement de niveau.
+- Les cibles apparaissent à des **positions aléatoires** dans une grille 3×3.
 - Anticipation (< 150 ms) → essai marqué anticipé, exclu du temps moyen et compté comme
   incorrect.
 
