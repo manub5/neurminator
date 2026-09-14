@@ -303,77 +303,15 @@ git commit -m "feat: vue historique réelle"
 
 ---
 
-### Task 3: Intégration de jsPsych (CDN figé) et chargement dynamique
+### Task 3: (annulée) Intégration jsPsych
 
-**Files:**
-- Create: `js/games/loader.js`
-- Modify: `index.html`
+**Décision d'implémentation :** jsPsych 8 sans build n'apporte pas de bénéfice pour un jeu
+à rendu entièrement custom. Le span est implémenté en JavaScript natif. Cette tâche est
+**annulée** ; passer directement à Task 4.
 
-**Interfaces:**
-- Consumes: rien.
-- Produces: `loader.loadJsPsych()` → `Promise<jsPsych>` qui injecte les scripts CDN (une seule fois) et résout l'objet global `jsPsych`.
-
-- [ ] **Step 1: Créer `js/games/loader.js`**
-
-```js
-const JSPsych_VERSION = "8.2.1";
-const CORE_URL = `https://unpkg.com/jspsych@${JSPsych_VERSION}`;
-
-let loadingPromise = null;
-
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const existing = document.querySelector(`script[src="${src}"]`);
-    if (existing) {
-      if (existing.dataset.loaded === "true") return resolve();
-      existing.addEventListener("load", resolve);
-      existing.addEventListener("error", reject);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = src;
-    script.addEventListener("load", () => {
-      script.dataset.loaded = "true";
-      resolve();
-    });
-    script.addEventListener("error", () => reject(new Error(`Failed to load ${src}`)));
-    document.head.appendChild(script);
-  });
-}
-
-export function loadJsPsych() {
-  if (window.jsPsych) return Promise.resolve(window.jsPsych);
-  if (loadingPromise) return loadingPromise;
-
-  loadingPromise = loadScript(CORE_URL).then(() => {
-    if (!window.jsPsych) throw new Error("jsPsych not available after load");
-    return window.jsPsych;
-  });
-
-  return loadingPromise;
-}
-```
-
-- [ ] **Step 2: Ajouter le fichier au cache du service worker**
-
-Dans `sw.js`, ajouter `"./js/games/loader.js"` à `APP_SHELL`. Incrémenter `CACHE_VERSION` en `v2`.
-
-- [ ] **Step 3: Vérifier le chargement**
-
-Run: serveur HTTP, console navigateur. Exécuter :
-
-```js
-import('./js/games/loader.js').then(m => m.loadJsPsych().then(j => console.log('jsPsych', typeof j)));
-```
-
-Expected : `jsPsych object` (ou fonction), sans erreur réseau. En cas d'URL CDN invalide, corriger la version.
-
-- [ ] **Step 4: Commit**
-
-```bash
-git add js/games/loader.js sw.js
-git commit -m "feat: chargement jsPsych via CDN figé"
-```
+**Rationale :** voir `docs/superpowers/specs/2026-09-14-palier-c-span-design.md` §7.
+Aucun fichier créé. Si jsPsych est introduit plus tard (Palier D), il le sera via un CDN
+figé et des plugins officiels.
 
 ---
 
@@ -518,14 +456,13 @@ git commit -m "feat: grille 3x3 du span et styles"
 - Create: `js/games/span.js`
 
 **Interfaces:**
-- Consumes: `span-grid.js` (`mount`, `randomSequence`), `loader.js` (`loadJsPsych`).
+- Consumes: `span-grid.js` (`mount`, `randomSequence`).
 - Produces: `span.prepare(level, { container, onFinish })` qui joue la partie et appelle `onFinish(raw)` avec `raw = { startLevel, maxSpan, trials, results, correctCount, total }`.
 
 - [ ] **Step 1: Écrire `js/games/span.js`**
 
 ```js
 import { mount, randomSequence } from "./span-grid.js";
-import { loadJsPsych } from "./loader.js";
 
 const SHOW_DURATION = 600;
 const GAP_DURATION = 250;
@@ -537,9 +474,6 @@ function wait(ms) {
 }
 
 export async function prepare(level, { container, onFinish }) {
-  await loadJsPsych();
-
-  const startedAt = Date.now();
   const startLevel = Math.max(1, level);
   const trials = [];
   const results = [];
@@ -839,7 +773,6 @@ Ajouter :
   "./js/core/difficulty.js",
   "./js/games/span.js",
   "./js/games/span-grid.js",
-  "./js/games/loader.js",
 ```
 
 Incrémenter `CACHE_VERSION` (`v2` → `v3`).
