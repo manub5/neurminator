@@ -12,11 +12,13 @@
     import { register as registerStorage } from "./storage.test.js";
     import { register as registerScoring } from "./scoring.test.js";
     import { register as registerDifficulty } from "./difficulty.test.js";
+    import { register as registerHistory } from "./history.test.js";
 
     const runner = createRunner();
     registerStorage(runner);
     registerScoring(runner);
     registerDifficulty(runner);
+    registerHistory(runner);
     runner.render(document.getElementById("tests"));
   </script>
 </body>
