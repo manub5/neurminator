@@ -95,12 +95,21 @@ boutons « Rejouer » et « Accueil »). « Accueil » est indispensable pour so
 Remplace le placeholder : parties groupées par jour (heure, jeu, niveau, score),
 état vide explicite si aucune partie. Pas de sparkline (Palier E).
 
-## 7. jsPsych
+## 7. Moteur d'exécution
 
-- Cœur jsPsych via CDN, **version figée**.
-- Pas d'usage de `serial-reaction-time-mouse` (rendu non custom).
-- Plugin maison pour la grille 3×3 dessinant notre HTML/CSS, structure inspirée des
-  plugins officiels.
+**Écart au spec initial (décision d'implémentation) :** jsPsych 8 s'utilise sans build
+comme un framework de *plugins* qui prennent le contrôle total du rendu
+(`jsPsych.run([{ type: plugin }])`). Pour un jeu à rendu entièrement custom comme le span,
+l'intégrer reviendrait à écrire une boucle d'essais maison à l'intérieur d'un plugin, en
+ajoutant une dépendance CDN de ~76 Ko sans bénéfice de timing réel.
+
+Décision : le span est implémenté en **JavaScript natif** — boucle d'essais explicite,
+`setTimeout` pour les durées, `performance.now()` si besoin de mesure. Avantages :
+compréhension directe, aucune dépendance réseau (meilleur hors-ligne), testable.
+jsPsych pourra être introduit pour les jeux où il apporte réellement (N-back, Stroop)
+au Palier D, via des plugins officiels.
+
+Le pattern de module (`prepare(level, { container, onFinish })`) reste inchangé.
 
 ## 8. Tests
 
