@@ -1,4 +1,5 @@
 import { createRouter } from "./router.js";
+import * as theme from "./theme.js";
 import * as home from "./views/home.js";
 import * as game from "./views/game.js";
 import * as history from "./views/history.js";
@@ -35,6 +36,8 @@ const router = createRouter({
 });
 
 router.start();
+
+theme.init();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
