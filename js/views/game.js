@@ -1,5 +1,8 @@
 import { getGame } from "../games/index.js";
 import * as span from "../games/span.js";
+import * as nback from "../games/nback.js";
+import * as stroop from "../games/stroop.js";
+import * as reaction from "../games/reaction.js";
 import { normalize } from "../core/scoring.js";
 import { nextLevel } from "../core/difficulty.js";
 import {
@@ -12,7 +15,7 @@ import {
 
 export const meta = { title: "Jeu", nav: false, hideHeader: true };
 
-const MODULES = { span };
+const MODULES = { span, nback, stroop, reaction };
 
 export function render(container, params = {}) {
   const game = getGame(params.id);
