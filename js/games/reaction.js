@@ -4,8 +4,6 @@ const MAX_DELAY = 2500;
 const ANTICIPATION_MS = 150;
 const RESPONSE_WINDOW = 2000;
 
-const PALETTE = ["#4f8cff", "#4caf50", "#ff5c5c", "#f2c94c"];
-
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -16,6 +14,16 @@ export function modeForLevel(level) {
   return 4;
 }
 
+function randomPositions(count, cols = 3, rows = 3) {
+  const cells = [];
+  for (let i = 0; i < cols * rows; i++) cells.push(i);
+  for (let i = cells.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cells[i], cells[j]] = [cells[j], cells[i]];
+  }
+  return cells.slice(0, count);
+}
+
 export async function prepare(level, { container, onFinish }) {
   container.innerHTML = "";
   const mode = modeForLevel(level);
@@ -24,8 +32,8 @@ export async function prepare(level, { container, onFinish }) {
   instruction.className = "reaction-instruction";
   instruction.textContent =
     mode === 1
-      ? "Tapez dès que le cercle apparaît."
-      : "Tapez le cercle bleu, uniquement lui.";
+      ? "Tapez la balle dès qu'elle apparaît."
+      : "Tapez la balle entourée, uniquement elle.";
   container.appendChild(instruction);
 
   const stage = document.createElement("div");
@@ -43,20 +51,23 @@ export async function prepare(level, { container, onFinish }) {
       await wait(MIN_DELAY + Math.random() * (MAX_DELAY - MIN_DELAY));
 
       const count = mode;
-      const activeIndex = Math.floor(Math.random() * count);
+      const positions = randomPositions(count);
+      const activePos = positions[Math.floor(Math.random() * count)];
+
       const targets = [];
-      for (let c = 0; c < count; c++) {
+      for (const pos of positions) {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "reaction-target";
-        btn.style.background = PALETTE[c % PALETTE.length];
-        btn.dataset.active = c === activeIndex ? "true" : "false";
+        btn.style.gridArea = `${Math.floor(pos / 3) + 1} / ${(pos % 3) + 1}`;
+        const isActive = pos === activePos;
+        if (isActive) btn.classList.add("is-active");
+        btn.dataset.active = isActive ? "true" : "false";
         stage.appendChild(btn);
         targets.push(btn);
       }
 
       const startedAt = performance.now();
-
       const result = await new Promise((resolve) => {
         let settled = false;
         const handlers = targets.map((btn) => {
@@ -97,10 +108,17 @@ export async function prepare(level, { container, onFinish }) {
 
     const avgRt = rts.length
       ? Math.round(rts.reduce((a, b) => a + b, 0) / rts.length)
-      : 0;
+      : null;
     onFinish({ avgRt, correct, total, mode, anticipations });
   } catch (err) {
     console.error("Reaction error", err);
-    onFinish({ avgRt: 0, correct, total, mode, anticipations, error: String(err) });
+    onFinish({
+      avgRt: null,
+      correct,
+      total,
+      mode,
+      anticipations,
+      error: String(err),
+    });
   }
 }

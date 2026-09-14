@@ -37,6 +37,13 @@ export function render(container, params = {}) {
     container,
     onFinish(raw) {
       const { score } = normalize(game.id, raw);
+
+      if (score == null) {
+        showNoScore(container, { game, params });
+        playBeep(getSettings().soundEnabled);
+        return;
+      }
+
       const durationMs = Date.now() - startedAt;
 
       addHistoryEntry({
@@ -107,5 +114,36 @@ function showResult(container, { game, score, isBest, bestScore, newLevel, param
 
   actions.append(replay, home);
   card.append(title, value, record, next, actions);
+  container.appendChild(card);
+}
+
+function showNoScore(container, { game, params }) {
+  container.innerHTML = "";
+
+  const card = document.createElement("div");
+  card.className = "card result-card";
+
+  const title = document.createElement("h2");
+  title.textContent = "Pas de temps valide";
+
+  const text = document.createElement("p");
+  text.className = "game-card__meta";
+  text.textContent = "Aucun essai correct : rien n'a été enregistré. Réessayez !";
+
+  const actions = document.createElement("div");
+  actions.className = "span-actions";
+
+  const replay = document.createElement("button");
+  replay.type = "button";
+  replay.textContent = "Rejouer";
+  replay.addEventListener("click", () => params.navigate("game", { id: game.id }));
+
+  const home = document.createElement("button");
+  home.type = "button";
+  home.textContent = "Accueil";
+  home.addEventListener("click", () => params.navigate("home"));
+
+  actions.append(replay, home);
+  card.append(title, text, actions);
   container.appendChild(card);
 }
