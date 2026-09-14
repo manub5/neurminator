@@ -154,3 +154,25 @@
   font-weight: 700;
   border-radius: var(--radius);
 }
+
+.reaction-instruction {
+  text-align: center;
+  color: var(--text-dim);
+  margin: 0 0 16px;
+}
+
+.reaction-stage {
+  min-height: 45vh;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.reaction-target {
+  width: 30vw;
+  max-width: 140px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+}
