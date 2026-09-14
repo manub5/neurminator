@@ -1,8 +1,26 @@
+const REACTION_TARGET = { 1: 500, 2: 480, 3: 460 };
+const REACTION_TARGET_HIGH = 440;
+
+function reactionTarget(level) {
+  return REACTION_TARGET[level] ?? REACTION_TARGET_HIGH;
+}
+
 const RULES = {
   span: {
     isSuccess: (score, level) => score >= level,
   },
+  nback: {
+    isSuccess: (score) => score >= 0.85,
+  },
+  stroop: {
+    isSuccess: (score) => score >= 0.85,
+  },
+  reaction: {
+    isSuccess: (score, level) => score > 0 && score <= reactionTarget(level),
+  },
 };
+
+const CEILINGS = { nback: 5 };
 
 const MIN_LEVEL = 1;
 const MIN_SAMPLES = 2;
@@ -23,7 +41,11 @@ export function nextLevel(gameId, currentLevel, recentScores) {
   const rate = successRate(gameId, currentLevel, recentScores);
   if (rate === null) return currentLevel;
 
-  if (rate > UP_THRESHOLD) return currentLevel + 1;
-  if (rate < DOWN_THRESHOLD) return Math.max(MIN_LEVEL, currentLevel - 1);
-  return currentLevel;
+  let next = currentLevel;
+  if (rate > UP_THRESHOLD) next = currentLevel + 1;
+  else if (rate < DOWN_THRESHOLD) next = Math.max(MIN_LEVEL, currentLevel - 1);
+
+  const ceiling = CEILINGS[gameId];
+  if (ceiling) next = Math.min(next, ceiling);
+  return next;
 }

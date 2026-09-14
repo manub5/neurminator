@@ -38,4 +38,34 @@ export function register({ suite, test }) {
       assertEqual(difficulty.nextLevel("span", 4, [4, 3, 4]), 5);
     });
   });
+
+  suite("difficulty: nback", () => {
+    test("3 scores ≥ 0.85 → montée", () => {
+      assertEqual(difficulty.nextLevel("nback", 2, [0.9, 0.9, 0.9]), 3);
+    });
+    test("3 scores faibles → descente", () => {
+      assertEqual(difficulty.nextLevel("nback", 2, [0.5, 0.5, 0.5]), 1);
+    });
+    test("plafond nback à 5", () => {
+      assertEqual(difficulty.nextLevel("nback", 5, [0.99, 0.99]), 5);
+    });
+  });
+
+  suite("difficulty: stroop", () => {
+    test("3 scores ≥ 0.85 → montée", () => {
+      assertEqual(difficulty.nextLevel("stroop", 1, [0.9, 0.9, 0.9]), 2);
+    });
+  });
+
+  suite("difficulty: reaction", () => {
+    test("temps sous le seuil → montée", () => {
+      assertEqual(difficulty.nextLevel("reaction", 1, [400, 420, 430]), 2);
+    });
+    test("temps au-dessus du seuil → descente", () => {
+      assertEqual(difficulty.nextLevel("reaction", 3, [600, 620, 610]), 2);
+    });
+    test("score 0 (aucun correct) → descente", () => {
+      assertEqual(difficulty.nextLevel("reaction", 2, [0, 0, 0]), 1);
+    });
+  });
 }

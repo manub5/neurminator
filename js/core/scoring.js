@@ -3,6 +3,18 @@ const RULES = {
     extractScore: (raw) => raw.maxSpan,
     higherIsBetter: true,
   },
+  nback: {
+    extractScore: (raw) => (raw.total > 0 ? raw.correct / raw.total : 0),
+    higherIsBetter: true,
+  },
+  stroop: {
+    extractScore: (raw) => (raw.total > 0 ? raw.correct / raw.total : 0),
+    higherIsBetter: true,
+  },
+  reaction: {
+    extractScore: (raw) => raw.avgRt,
+    higherIsBetter: false,
+  },
 };
 
 export function normalize(gameId, raw) {

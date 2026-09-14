@@ -20,4 +20,29 @@ export function register({ suite, test }) {
       assertEqual(threw, true);
     });
   });
+
+  suite("scoring: nback/stroop/reaction", () => {
+    test("nback = correct/total", () => {
+      const r = scoring.normalize("nback", { correct: 8, total: 10 });
+      assertEqual(r.score, 0.8);
+      assertEqual(r.higherIsBetter, true);
+    });
+
+    test("stroop = correct/total", () => {
+      const r = scoring.normalize("stroop", { correct: 18, total: 24 });
+      assertEqual(r.score, 0.75);
+      assertEqual(r.higherIsBetter, true);
+    });
+
+    test("reaction = avgRt, plus bas mieux", () => {
+      const r = scoring.normalize("reaction", { avgRt: 412 });
+      assertEqual(r.score, 412);
+      assertEqual(r.higherIsBetter, false);
+    });
+
+    test("nback total 0 ne divise pas par zéro", () => {
+      const r = scoring.normalize("nback", { correct: 0, total: 0 });
+      assertEqual(r.score, 0);
+    });
+  });
 }
