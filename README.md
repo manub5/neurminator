@@ -51,4 +51,14 @@ Sans cela, les visiteurs restent sur l'ancienne version en cache.
 - [ ] Le site est installable sur Android (bannière « Ajouter à l'écran d'accueil »).
 - [ ] Sur iOS, l'ajout manuel via Partager fonctionne.
 - [ ] Hors-ligne (DevTools → Network → Offline), l'app se lance.
-- [ ] `tests/run.html` affiche 8 réussis, 0 échoués.
+- [ ] `tests/run.html` affiche 19 réussis, 0 échoués.
+
+### Palier C — Span de mémoire
+
+- [ ] L'accueil ouvre le jeu Span.
+- [ ] La séquence s'allume case par case, puis la grille devient cliquable.
+- [ ] Valider une séquence complète donne un feedback.
+- [ ] La partie s'arrête au premier échec.
+- [ ] L'écran de résultat affiche score, record et prochain niveau.
+- [ ] L'Historique montre la partie jouée.
+- [ ] L'accueil affiche un niveau mis à jour.
