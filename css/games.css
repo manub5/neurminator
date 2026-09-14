@@ -19,3 +19,16 @@
 }
 
 .spacer { height: 32vh; }
+
+.history-day {
+  font-size: 0.95rem;
+  color: var(--text-dim);
+  text-transform: capitalize;
+  margin: 20px 0 8px;
+}
+
+.history-entry {
+  padding: 12px var(--gap);
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
