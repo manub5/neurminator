@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v3";
 const CACHE_NAME = `neurminator-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -11,6 +11,10 @@ const APP_SHELL = [
   "./js/app.js",
   "./js/router.js",
   "./js/games/index.js",
+  "./js/games/span.js",
+  "./js/games/span-grid.js",
+  "./js/core/scoring.js",
+  "./js/core/difficulty.js",
   "./js/storage/local.js",
   "./js/views/home.js",
   "./js/views/game.js",
