@@ -10,9 +10,13 @@
   <script type="module">
     import { createRunner } from "./harness.js";
     import { register as registerStorage } from "./storage.test.js";
+    import { register as registerScoring } from "./scoring.test.js";
+    import { register as registerDifficulty } from "./difficulty.test.js";
 
     const runner = createRunner();
     registerStorage(runner);
+    registerScoring(runner);
+    registerDifficulty(runner);
     runner.render(document.getElementById("tests"));
   </script>
 </body>
