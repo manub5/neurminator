@@ -5,12 +5,14 @@ import * as stroop from "../games/stroop.js";
 import * as reaction from "../games/reaction.js";
 import { normalize } from "../core/scoring.js";
 import { nextLevel } from "../core/difficulty.js";
+import { playBeep } from "../sound.js";
 import {
   getGames,
   saveGames,
   getHistory,
   addHistoryEntry,
   makeId,
+  getSettings,
 } from "../storage/local.js";
 
 export const meta = { title: "Jeu", nav: false, hideHeader: true };
@@ -64,6 +66,7 @@ export function render(container, params = {}) {
       });
 
       showResult(container, { game, score, isBest, bestScore, newLevel, params });
+      playBeep(getSettings().soundEnabled);
     },
   });
 }
