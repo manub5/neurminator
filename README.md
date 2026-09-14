@@ -71,3 +71,12 @@ Sans cela, les visiteurs restent sur l'ancienne version en cache.
 - [ ] Chaque jeu enregistre dans l'Historique et met à jour le niveau.
 - [ ] Le record de Réaction baisse (plus bas = mieux).
 - [ ] `tests/run.html` affiche 30 réussis, 0 échoués.
+
+### Palier E — Finitions
+
+- [ ] Réglages : le thème auto/clair/sombre s'applique et persiste.
+- [ ] L'interrupteur de son persiste.
+- [ ] « Effacer l'historique » demande confirmation et remet les niveaux à 1.
+- [ ] L'encart iOS est présent.
+- [ ] L'Historique montre la tendance par jeu et une sparkline.
+- [ ] `tests/run.html` affiche 38 réussis, 0 échoués.
