@@ -14,3 +14,6 @@ node_modules/
 Thumbs.db
 .idea/
 .vscode/
+
+*.log
+config.secret.json

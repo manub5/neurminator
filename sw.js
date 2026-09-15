@@ -1,4 +1,4 @@
-const CACHE_VERSION = "v5";
+const CACHE_VERSION = "v6";
 const CACHE_NAME = `neurminator-${CACHE_VERSION}`;
 
 const APP_SHELL = [
@@ -12,15 +12,20 @@ const APP_SHELL = [
   "./js/router.js",
   "./js/theme.js",
   "./js/sound.js",
+  "./js/engine/loop.js",
+  "./js/engine/render.js",
+  "./js/engine/input.js",
+  "./js/engine/scene.js",
+  "./js/engine/canvas-game.js",
   "./js/games/index.js",
   "./js/games/span.js",
-  "./js/games/span-grid.js",
   "./js/games/nback.js",
   "./js/games/stroop.js",
   "./js/games/reaction.js",
   "./js/core/scoring.js",
   "./js/core/difficulty.js",
   "./js/core/history.js",
+  "./js/core/sequence.js",
   "./js/storage/local.js",
   "./js/views/home.js",
   "./js/views/game.js",
@@ -46,7 +51,9 @@ self.addEventListener("activate", (event) => {
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+          keys
+            .filter((k) => k.startsWith("neurminator-") && k !== CACHE_NAME)
+            .map((k) => caches.delete(k))
         )
       )
   );
@@ -69,7 +76,12 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then((r) => r || caches.match("./index.html")))
+        .catch(() =>
+          caches
+            .match(request)
+            .then((r) => r || caches.match("./index.html"))
+            .then((r) => r || new Response("Hors ligne", { status: 503 }))
+        )
     );
     return;
   }

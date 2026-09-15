@@ -14,7 +14,34 @@ Puis ouvrir http://localhost:8000
 
 ## Tests
 
-Ouvrir `./tests/run.html` dans le navigateur.
+### Logique pure
+
+Ouvrir `./tests/run.html` dans le navigateur (67 réussis, 0 échoués).
+
+### End-to-end (Playwright)
+
+Prérequis : Node 20+, puis une fois :
+
+```
+npm install
+npx playwright install chromium
+```
+
+Lancer les suites (un serveur statique est démarré automatiquement) :
+
+```
+npm run test:e2e
+```
+
+Une suite par jeu : `tests/e2e/span.spec.mjs`, `nback.spec.mjs`, `stroop.spec.mjs`,
+`reaction.spec.mjs`, plus le socle `tests/e2e/helpers.mjs`.
+Les tests pilotent les jeux via le canal `window.__cog`, actif uniquement avec `?test=1`.
+
+## Jeux — rendu Canvas 2D
+
+Les 4 jeux sont rendus dans un `<canvas>` (Canvas 2D, JS vanilla, zéro dépendance
+runtime). Le moteur est dans `js/engine/` : boucle à pas de temps fixe, gestion du
+devicePixelRatio, entrées clavier ET pointeur, pause sur onglet caché, scènes.
 
 ## Déployer
 
@@ -80,3 +107,12 @@ Sans cela, les visiteurs restent sur l'ancienne version en cache.
 - [ ] L'encart iOS est présent.
 - [ ] L'Historique montre la tendance par jeu et une sparkline.
 - [ ] `tests/run.html` affiche 38 réussis, 0 échoués.
+
+### Palier F — Canvas 2D et Playwright
+
+- [ ] Chaque jeu est rendu dans un `<canvas>` (aucun élément DOM de jeu).
+- [ ] Le jeu reste fluide et identique en 60 et 144 Hz (boucle à pas fixe).
+- [ ] Chaque jeu est jouable au clavier ET au tactile/à la souris.
+- [ ] L'onglet caché met la partie en pause.
+- [ ] `tests/run.html` affiche 67 réussis, 0 échoués.
+- [ ] `npm run test:e2e` affiche 21 réussis, 0 échoués.

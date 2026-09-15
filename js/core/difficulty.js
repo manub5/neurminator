@@ -20,7 +20,7 @@ const RULES = {
   },
 };
 
-const CEILINGS = { nback: 5 };
+const CEILINGS = { span: 12, nback: 5 };
 
 const MIN_LEVEL = 1;
 const MIN_SAMPLES = 2;

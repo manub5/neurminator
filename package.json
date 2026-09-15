@@ -1,0 +1,13 @@
+{
+  "name": "neurminator-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Suites Playwright e2e de neurminator (outil de test, non embarqué dans la PWA)",
+  "type": "module",
+  "scripts": {
+    "test:e2e": "node tests/e2e/run.mjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

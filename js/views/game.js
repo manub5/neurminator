@@ -1,4 +1,4 @@
-import { getGame } from "../games/index.js";
+import { formatScore, getGame } from "../games/index.js";
 import * as span from "../games/span.js";
 import * as nback from "../games/nback.js";
 import * as stroop from "../games/stroop.js";
@@ -25,7 +25,7 @@ export function render(container, params = {}) {
 
   if (!game || !mod) {
     container.textContent = "Jeu inconnu.";
-    return;
+    return null;
   }
 
   const progress = getGames();
@@ -33,9 +33,22 @@ export function render(container, params = {}) {
   const level = state.level;
   const startedAt = Date.now();
 
-  mod.prepare(level, {
+  let alive = true;
+  let handle = null;
+
+  function destroyGame() {
+    if (handle && typeof handle.destroy === "function") {
+      handle.destroy();
+    }
+    handle = null;
+  }
+
+  handle = mod.prepare(level, {
     container,
     onFinish(raw) {
+      if (!alive) return;
+      destroyGame();
+
       const { score } = normalize(game.id, raw);
 
       if (score == null) {
@@ -76,6 +89,11 @@ export function render(container, params = {}) {
       playBeep(getSettings().soundEnabled);
     },
   });
+
+  return () => {
+    alive = false;
+    destroyGame();
+  };
 }
 
 function showResult(container, { game, score, isBest, bestScore, newLevel, params }) {
@@ -89,11 +107,11 @@ function showResult(container, { game, score, isBest, bestScore, newLevel, param
 
   const value = document.createElement("p");
   value.className = "result-value";
-  value.textContent = `${score}${game.unit}`;
+  value.textContent = formatScore(game, score);
 
   const record = document.createElement("p");
   record.className = "game-card__meta";
-  record.textContent = `Record : ${bestScore}${game.unit}`;
+  record.textContent = `Record : ${formatScore(game, bestScore)}`;
 
   const next = document.createElement("p");
   next.className = "game-card__meta";
