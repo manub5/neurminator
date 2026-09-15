@@ -3,6 +3,7 @@ import { serve } from "./server.mjs";
 
 const suites = [
   ["server", "./server.spec.mjs"],
+  ["history-navigation", "./history-navigation.spec.mjs"],
   ["engine", "./engine.spec.mjs"],
   ["span", "./span.spec.mjs"],
   ["nback", "./nback.spec.mjs"],

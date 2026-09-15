@@ -90,9 +90,15 @@ export function render(container, params = {}) {
     },
   });
 
-  return () => {
-    alive = false;
-    destroyGame();
+  return {
+    destroy() {
+      alive = false;
+      destroyGame();
+    },
+    onBack() {
+      if (!handle || typeof handle.pause !== "function") return null;
+      return handle.pause();
+    },
   };
 }
 

@@ -250,5 +250,5 @@ export function prepare(level, { container, onFinish }) {
     });
   }
 
-  return { destroy: game.destroy };
+  return { destroy: game.destroy, pause: game.pause };
 }

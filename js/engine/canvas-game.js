@@ -105,6 +105,16 @@ export function mountGame(container, { gameId, scene, describe = "" }) {
   const clock = createGameClock();
   const gameClock = () => clock.now();
 
+  function setManualPaused(value) {
+    if (paused === value) return false;
+    paused = value;
+    clock.setPaused("manual", paused);
+    input.clear();
+    if (channel) channel.setPaused(paused);
+    if (scene.pause) scene.pause(paused);
+    return true;
+  }
+
   const input = createInput(canvas, {
     onKeyDown(code) {
       if (paused) return;
@@ -115,11 +125,7 @@ export function mountGame(container, { gameId, scene, describe = "" }) {
       if (scene.pointerDown) scene.pointerDown(x, y);
     },
     onEscape() {
-      paused = !paused;
-      clock.setPaused("manual", paused);
-      input.clear();
-      if (channel) channel.setPaused(paused);
-      if (scene.pause) scene.pause(paused);
+      setManualPaused(!paused);
     },
   });
 
@@ -171,6 +177,9 @@ export function mountGame(container, { gameId, scene, describe = "" }) {
   return {
     canvas,
     channel,
+    pause() {
+      return setManualPaused(true);
+    },
     destroy() {
       loop.stop();
       input.destroy();
