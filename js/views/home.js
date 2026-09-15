@@ -1,4 +1,4 @@
-import { GAMES } from "../games/index.js";
+import { GAMES, formatScore } from "../games/index.js";
 import { getGames } from "../storage/local.js";
 
 export const meta = { title: "Accueil", nav: true };
@@ -20,7 +20,7 @@ export function render(container, params = {}) {
     meta.className = "game-card__meta";
     const best = state.bestScore == null
       ? "aucun score"
-      : `record ${state.bestScore}${game.unit}`;
+      : `record ${formatScore(game, state.bestScore)}`;
     meta.textContent = `Niveau ${state.level} · ${best} · ${state.attempts} partie(s)`;
 
     card.append(name, meta);

@@ -17,7 +17,7 @@ function write(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (err) {
-    console.error(`Failed to write ${key}`, err);
+    console.error("Failed to write storage value", key, err);
   }
 }
 
@@ -39,7 +39,8 @@ export function saveSettings(settings) {
 }
 
 export function getGames() {
-  return read(GAMES_KEY, {});
+  const games = read(GAMES_KEY, {});
+  return games && typeof games === "object" && !Array.isArray(games) ? games : {};
 }
 
 export function saveGames(games) {
@@ -47,7 +48,8 @@ export function saveGames(games) {
 }
 
 export function getHistory() {
-  return read(HISTORY_KEY, []);
+  const history = read(HISTORY_KEY, []);
+  return Array.isArray(history) ? history : [];
 }
 
 export function addHistoryEntry(entry) {

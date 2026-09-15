@@ -1,5 +1,5 @@
 import { getHistory } from "../storage/local.js";
-import { GAMES, getGame } from "../games/index.js";
+import { GAMES, getGame, formatScore } from "../games/index.js";
 import { groupByDay, seriesForGame, trendForGame } from "../core/history.js";
 
 export const meta = { title: "Historique", nav: true };
@@ -95,12 +95,12 @@ export function render(container) {
       const card = document.createElement("div");
       card.className = "card history-entry";
       const name = game ? game.name : entry.game;
-      const unit = game ? game.unit : "";
       const time = new Date(entry.date).toLocaleTimeString("fr-FR", {
         hour: "2-digit",
         minute: "2-digit",
       });
-      card.textContent = `${time} · ${name} · Niveau ${entry.level} · ${entry.score}${unit}`;
+      const score = game ? formatScore(game, entry.score) : String(entry.score);
+      card.textContent = `${time} · ${name} · Niveau ${entry.level} · ${score}`;
       container.appendChild(card);
     }
   }

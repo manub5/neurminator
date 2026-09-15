@@ -32,11 +32,21 @@ export function register({ suite, test }) {
       storage.saveGames({ nback: { level: 2, attempts: 1, bestScore: 0.8 } });
       assertEqual(storage.getGames().nback.level, 2);
     });
+
+    test("getGames ignore une valeur non objet", () => {
+      localStorage.setItem(storage.GAMES_KEY, "null");
+      assertEqual(storage.getGames(), {});
+    });
   });
 
   suite("storage: history", () => {
     test("getHistory renvoie un tableau vide si absent", () => {
       localStorage.clear();
+      assertEqual(storage.getHistory(), []);
+    });
+
+    test("getHistory ignore une valeur non tableau", () => {
+      localStorage.setItem(storage.HISTORY_KEY, JSON.stringify({ invalid: true }));
       assertEqual(storage.getHistory(), []);
     });
 

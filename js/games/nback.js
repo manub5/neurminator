@@ -1,14 +1,13 @@
+import { mountGame } from "../engine/canvas-game.js";
+import { roundRect, themeColors, drawWrappedText } from "../engine/render.js";
+
 const LETTERS = ["B", "D", "F", "G", "K", "M", "P", "T"];
-const SHOW_DURATION = 1500;
-const GAP_DURATION = 500;
-const READY_DURATION = 1200;
+const SHOW_DURATION = 1.5;
+const GAP_DURATION = 0.5;
+const READY_DURATION = 1.2;
 const JUDGED_TRIALS = 20;
 const TARGET_RATIO = 0.3;
 const MAX_N = 5;
-
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function randomLetter(avoid) {
   let letter;
@@ -38,73 +37,164 @@ export function buildSequence(n, judgedTrials, targetRatio) {
   return { seq, targetFlags };
 }
 
-export async function prepare(level, { container, onFinish }) {
+function respondRect(size) {
+  const w = Math.min(size.width * 0.8, 320);
+  const h = 56;
+  return { x: (size.width - w) / 2, y: size.height - h - 16, w, h };
+}
+
+export function prepare(level, { container, onFinish }) {
   const maxN = Math.max(1, Math.min(level, MAX_N));
-  container.innerHTML = "";
+  const { seq } = buildSequence(maxN, JUDGED_TRIALS, TARGET_RATIO);
 
-  const instruction = document.createElement("p");
-  instruction.className = "nback-instruction";
-  container.appendChild(instruction);
-
-  const stimulus = document.createElement("div");
-  stimulus.className = "nback-stimulus";
-  container.appendChild(stimulus);
-
-  const respond = document.createElement("button");
-  respond.type = "button";
-  respond.className = "nback-respond";
-  respond.textContent = "Correspond";
-  container.appendChild(respond);
-
-  const { seq, targetFlags } = buildSequence(maxN, JUDGED_TRIALS, TARGET_RATIO);
-
-  instruction.textContent = `${maxN}-back : tapez « Correspond » si la lettre est la même qu'il y a ${maxN} lettres.`;
-
+  let finished = false;
   let correct = 0;
   let total = 0;
   let targetCount = 0;
+  let index = 0;
+  let pressed = false;
+  let phase = "ready";
+  let timer = READY_DURATION;
+  let rect = { x: 0, y: 0, w: 0, h: 0 };
 
-  try {
-    await wait(READY_DURATION);
-
-    for (let i = 0; i < seq.length; i++) {
-      const isJudged = i >= maxN;
-      stimulus.textContent = seq[i];
-      let pressed = false;
-      respond.disabled = !isJudged;
-
-      if (isJudged) {
-        await new Promise((resolve) => {
-          const onClick = () => {
-            pressed = true;
-            respond.removeEventListener("click", onClick);
-            resolve();
-          };
-          respond.addEventListener("click", onClick);
-          wait(SHOW_DURATION).then(() => {
-            respond.removeEventListener("click", onClick);
-            resolve();
-          });
-        });
-      } else {
-        await wait(SHOW_DURATION);
-      }
-
-      if (isJudged) {
-        const isTarget = targetFlags[total];
-        if (isTarget) targetCount += 1;
-        const ok = isTarget ? pressed : !pressed;
-        if (ok) correct += 1;
-        total += 1;
-      }
-
-      stimulus.textContent = "";
-      await wait(GAP_DURATION);
-    }
-
-    onFinish({ maxN, correct, total, targets: targetCount });
-  } catch (err) {
-    console.error("N-back error", err);
-    onFinish({ maxN, correct, total, targets: targetCount, error: String(err) });
+  function isJudged(i) {
+    return i >= maxN;
   }
+
+  function currentIsTarget() {
+    return isJudged(index) && seq[index] === seq[index - maxN];
+  }
+
+  function judge() {
+    if (!isJudged(index)) return;
+    const isTarget = currentIsTarget();
+    if (isTarget) targetCount += 1;
+    const ok = isTarget ? pressed : !pressed;
+    if (ok) correct += 1;
+    total += 1;
+  }
+
+  function finish() {
+    if (finished) return;
+    finished = true;
+    onFinish({ maxN, correct, total, targets: targetCount });
+  }
+
+  function advanceTrial() {
+    if (index === seq.length - 1) {
+      finish();
+      return;
+    }
+    index += 1;
+    pressed = false;
+    phase = "show";
+    timer = SHOW_DURATION;
+  }
+
+  function snapshot() {
+    return {
+      phase,
+      index,
+      letter: phase === "show" ? seq[index] : "",
+      pressed,
+      correct,
+      total,
+      target: currentIsTarget(),
+      maxN,
+    };
+  }
+
+  function press() {
+    if (finished || !isJudged(index) || phase !== "show") return;
+    pressed = true;
+    judge();
+    phase = "gap";
+    timer = GAP_DURATION;
+  }
+
+  const scene = {
+    keyDown(code) {
+      if (code === "Space") press();
+    },
+    pointerDown(x, y) {
+      if (x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h) {
+        press();
+      }
+    },
+    update(dt, { channel }) {
+      if (!finished) {
+        timer -= dt;
+        if (phase === "ready") {
+          if (timer <= 0) {
+            phase = "show";
+            timer = SHOW_DURATION;
+          }
+        } else if (phase === "show") {
+          if (timer <= 0) {
+            judge();
+            phase = "gap";
+            timer = GAP_DURATION;
+          }
+        } else if (phase === "gap") {
+          if (timer <= 0) advanceTrial();
+        }
+      }
+      if (channel) channel.setSnapshot(snapshot());
+    },
+    render({ ctx, size }) {
+      const colors = themeColors();
+      ctx.fillStyle = colors.background;
+      ctx.fillRect(0, 0, size.width, size.height);
+
+      rect = respondRect(size);
+
+      const instruction = `${maxN}-back : « Correspond » si la lettre est la même qu'il y a ${maxN} lettres.`;
+      ctx.fillStyle = colors.textDim;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      drawWrappedText(ctx, instruction, size.width / 2, 16, size.width * 0.92, 15, 20);
+
+      if (phase === "show") {
+        const letter = seq[index];
+        const fontSize = Math.min(size.width * 0.4, size.height * 0.3, 160);
+        ctx.fillStyle = colors.accent;
+        ctx.font = `700 ${fontSize}px system-ui, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(letter, size.width / 2, size.height * 0.42);
+      }
+
+      const judged = isJudged(index);
+      ctx.fillStyle = judged ? colors.accent : colors.surface2;
+      ctx.globalAlpha = judged ? (pressed ? 0.6 : 1) : 0.5;
+      roundRect(ctx, rect.x, rect.y, rect.w, rect.h, 12);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = judged ? colors.accentText : colors.text;
+      ctx.font = "600 18px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("Correspond", size.width / 2, rect.y + rect.h / 2);
+
+      const judgedTotal = JUDGED_TRIALS;
+      const progress = Math.min(total, judgedTotal) / judgedTotal;
+      ctx.fillStyle = colors.surface2;
+      ctx.fillRect(0, size.height - 4, size.width, 4);
+      ctx.fillStyle = colors.accent;
+      ctx.fillRect(0, size.height - 4, size.width * progress, 4);
+
+      ctx.textAlign = "left";
+      ctx.textBaseline = "alphabetic";
+    },
+  };
+
+  const game = mountGame(container, { gameId: "nback", scene, describe: `N-back ${maxN}` });
+
+  if (game.channel) {
+    game.channel.onInput((payload) => {
+      if (payload && payload.kind === "press") press();
+    });
+  }
+
+  return { destroy: game.destroy };
 }

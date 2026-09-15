@@ -10,15 +10,17 @@
 .game-card__name { font-size: 1.15rem; margin: 0 0 4px; }
 .game-card__meta { color: var(--text-dim); font-size: 0.9rem; }
 
-.stimulus {
-  min-height: 45vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 3rem;
+.game-canvas {
+  display: block;
+  width: 100%;
+  height: min(78vh, 560px);
+  border-radius: var(--radius);
+  background: var(--bg);
+  touch-action: none;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
-
-.spacer { height: 32vh; }
 
 .history-day {
   font-size: 0.95rem;
@@ -31,30 +33,6 @@
   padding: 12px var(--gap);
   margin-bottom: 8px;
   font-size: 0.95rem;
-}
-
-.span-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  width: min(80vw, 340px);
-  margin: 0 auto;
-}
-
-.span-cell {
-  aspect-ratio: 1;
-  border-radius: var(--radius);
-  background: var(--surface-2);
-  border: 2px solid transparent;
-  transition: background 120ms ease, border-color 120ms ease;
-}
-
-.span-cell.is-active {
-  background: var(--accent);
-}
-
-.span-cell.is-highlight {
-  border-color: var(--accent);
 }
 
 .span-actions {
@@ -71,13 +49,6 @@
   color: var(--accent-text);
 }
 
-.span-instruction {
-  text-align: center;
-  color: var(--text-dim);
-  margin: 0 0 16px;
-  min-height: 1.5em;
-}
-
 .result-card {
   text-align: center;
   padding: 32px var(--gap);
@@ -92,95 +63,6 @@
   font-size: 3rem;
   font-weight: 700;
   margin: 8px 0 16px;
-}
-
-.nback-instruction {
-  text-align: center;
-  color: var(--text-dim);
-  margin: 0 0 16px;
-  min-height: 1.5em;
-}
-
-.nback-stimulus {
-  min-height: 30vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 5rem;
-  font-weight: 700;
-  color: var(--accent);
-}
-
-.nback-respond {
-  display: block;
-  width: min(80vw, 340px);
-  margin: 24px auto 0;
-  padding: 20px;
-  font-size: 1.2rem;
-  background: var(--accent);
-  color: var(--accent-text);
-}
-
-.nback-respond:disabled {
-  opacity: 0.4;
-}
-
-.stroop-instruction {
-  text-align: center;
-  color: var(--text-dim);
-  margin: 0 0 16px;
-}
-
-.stroop-stimulus {
-  min-height: 26vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 3rem;
-  font-weight: 700;
-  letter-spacing: 2px;
-}
-
-.stroop-pad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  width: min(88vw, 360px);
-  margin: 24px auto 0;
-}
-
-.stroop-pad button {
-  padding: 14px 8px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  border-radius: var(--radius);
-}
-
-.reaction-stage {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  gap: 10px;
-  width: min(80vw, 340px);
-  height: min(80vw, 340px);
-  margin: 24px auto 0;
-}
-
-.reaction-target {
-  border-radius: 50%;
-  background: transparent;
-  border: 3px solid var(--surface-2);
-}
-
-.reaction-target.is-active {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
-.reaction-instruction {
-  text-align: center;
-  color: var(--text-dim);
-  margin: 0 0 16px;
 }
 
 .summary-card { margin-bottom: 12px; }

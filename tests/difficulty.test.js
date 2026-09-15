@@ -18,6 +18,10 @@ export function register({ suite, test }) {
   });
 
   suite("difficulty: seuils discrets span", () => {
+    test("plafond span à 12", () => {
+      assertEqual(difficulty.nextLevel("span", 12, [12, 12, 12]), 12);
+    });
+
     test("2 réussites sur 3 → montée", () => {
       assertEqual(difficulty.nextLevel("span", 3, [3, 3, 2]), 4);
     });

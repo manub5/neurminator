@@ -32,3 +32,9 @@ export const GAMES = [
 export function getGame(id) {
   return GAMES.find((g) => g.id === id) || null;
 }
+
+export function formatScore(game, score) {
+  if (!game) return String(score);
+  if (game.unit === "%") return `${Math.round(score * 100)}%`;
+  return `${score}${game.unit}`;
+}

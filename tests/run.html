@@ -13,12 +13,20 @@
     import { register as registerScoring } from "./scoring.test.js";
     import { register as registerDifficulty } from "./difficulty.test.js";
     import { register as registerHistory } from "./history.test.js";
+    import { register as registerEngine } from "./engine.test.js";
+    import { register as registerSequence } from "./sequence.test.js";
+    import { register as registerNback } from "./nback.test.js";
+    import { register as registerGames } from "./games.test.js";
 
     const runner = createRunner();
     registerStorage(runner);
     registerScoring(runner);
     registerDifficulty(runner);
     registerHistory(runner);
+    registerEngine(runner);
+    registerSequence(runner);
+    registerNback(runner);
+    registerGames(runner);
     runner.render(document.getElementById("tests"));
   </script>
 </body>
