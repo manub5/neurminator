@@ -19,3 +19,7 @@ repos:
         language: pygrep
         entry: "/home/[a-z_][a-z0-9_-]*/"
         types: [text]
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
