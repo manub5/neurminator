@@ -17,6 +17,7 @@
     import { register as registerSequence } from "./sequence.test.js";
     import { register as registerNback } from "./nback.test.js";
     import { register as registerGames } from "./games.test.js";
+    import { register as registerSound } from "./sound.test.js";
 
     const runner = createRunner();
     registerStorage(runner);
@@ -27,6 +28,7 @@
     registerSequence(runner);
     registerNback(runner);
     registerGames(runner);
+    registerSound(runner);
     runner.render(document.getElementById("tests"));
   </script>
 </body>

@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-yaml
       - id: end-of-file-fixer
@@ -8,7 +8,14 @@ repos:
       - id: check-added-large-files
 
   - repo: https://github.com/semgrep/pre-commit
-    rev: 'v1.175.0'
+    rev: 'v1.177.0'
     hooks:
       - id: semgrep
         args: ['--config', 'auto', '--error']
+  - repo: local
+    hooks:
+      - id: pas-de-chemin-perso
+        name: Refuser les chemins /home/<utilisateur>
+        language: pygrep
+        entry: "/home/[a-z_][a-z0-9_-]*/"
+        types: [text]
