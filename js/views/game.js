@@ -1,11 +1,14 @@
-import { formatScore, getGame } from "../games/index.js";
+import { formatScore, getGame, displayName } from "../games/index.js";
 import * as span from "../games/span.js";
 import * as nback from "../games/nback.js";
 import * as stroop from "../games/stroop.js";
 import * as reaction from "../games/reaction.js";
+import * as pairs from "../games/pairs.js";
+import * as gonogo from "../games/gonogo.js";
 import { normalize } from "../core/scoring.js";
-import { nextLevel } from "../core/difficulty.js";
-import { playBeep } from "../sound.js";
+import { nextLevel, minLevelFor } from "../core/difficulty.js";
+import { playBeep, playVictory, playLevelUp } from "../sound.js";
+import { showOverlay } from "../ui/overlay.js";
 import {
   getGames,
   saveGames,
@@ -17,7 +20,7 @@ import {
 
 export const meta = { title: "Jeu", nav: false, hideHeader: true };
 
-const MODULES = { span, nback, stroop, reaction };
+const MODULES = { span, nback, stroop, reaction, pairs, gonogo };
 
 export function render(container, params = {}) {
   const game = getGame(params.id);
@@ -29,8 +32,8 @@ export function render(container, params = {}) {
   }
 
   const progress = getGames();
-  const state = progress[game.id] || { level: 1, attempts: 0, bestScore: null };
-  const level = state.level;
+  const state = progress[game.id] || { level: game.startLevel ?? 1, attempts: 0, bestScore: null };
+  const level = Math.max(state.level, minLevelFor(game.id));
   const startedAt = Date.now();
 
   let alive = true;
@@ -86,7 +89,28 @@ export function render(container, params = {}) {
       });
 
       showResult(container, { game, score, isBest, bestScore, newLevel, params });
-      playBeep(getSettings().soundEnabled);
+
+      const soundEnabled = getSettings().soundEnabled;
+      if (isBest) {
+        playVictory(soundEnabled);
+        showOverlay(container, {
+          emoji: "🏆",
+          title: "Nouveau record !",
+          message:
+            newLevel > level
+              ? `${formatScore(game, score)} · palier ${newLevel} débloqué`
+              : formatScore(game, score),
+        });
+      } else if (newLevel > level) {
+        playLevelUp(soundEnabled);
+        showOverlay(container, {
+          emoji: "⬆️",
+          title: `Palier ${newLevel} !`,
+          message: "Belle progression, continuez comme ça.",
+        });
+      } else {
+        playBeep(soundEnabled);
+      }
     },
   });
 
@@ -109,7 +133,11 @@ function showResult(container, { game, score, isBest, bestScore, newLevel, param
   card.className = "card result-card";
 
   const title = document.createElement("h2");
-  title.textContent = isBest ? "Nouveau record !" : "Bien joué";
+  title.textContent = isBest ? "🏆 Nouveau record !" : "👍 Bien joué";
+
+  const subtitle = document.createElement("p");
+  subtitle.className = "game-card__meta";
+  subtitle.textContent = displayName(game);
 
   const value = document.createElement("p");
   value.className = "result-value";
@@ -137,7 +165,7 @@ function showResult(container, { game, score, isBest, bestScore, newLevel, param
   home.addEventListener("click", () => params.navigate("home"));
 
   actions.append(replay, home);
-  card.append(title, value, record, next, actions);
+  card.append(title, subtitle, value, record, next, actions);
   container.appendChild(card);
 }
 
@@ -148,7 +176,7 @@ function showNoScore(container, { game, params }) {
   card.className = "card result-card";
 
   const title = document.createElement("h2");
-  title.textContent = "Pas de temps valide";
+  title.textContent = "⏱️ Pas de temps valide";
 
   const text = document.createElement("p");
   text.className = "game-card__meta";

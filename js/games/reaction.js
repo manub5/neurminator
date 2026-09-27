@@ -1,17 +1,41 @@
 import { mountGame } from "../engine/canvas-game.js";
 import { themeColors, drawWrappedText } from "../engine/render.js";
 import { keyboardIndexFromCode } from "../engine/input.js";
+import { playTouch } from "../sound.js";
+import { getSettings } from "../storage/local.js";
 
 const TOTAL_TRIALS = 15;
 const MIN_DELAY = 1.0;
 const MAX_DELAY = 2.5;
-const RESPONSE_WINDOW = 2.0;
+const RESPONSE_WINDOW_BASE = 2.0;
+const RESPONSE_WINDOW_FLOOR = 0.9;
 const POST_TRIAL = 0.4;
+const TOAST_DURATION = 1.1;
 
 export function modeForLevel(level) {
   if (level <= 1) return 1;
   if (level === 2) return 2;
   return 4;
+}
+
+// La fenêtre de réponse se resserre progressivement avec le niveau, même
+// au-delà du plafond de `modeForLevel`, pour que le jeu continue d'évoluer.
+export function windowForLevel(level) {
+  return Math.max(RESPONSE_WINDOW_FLOOR, RESPONSE_WINDOW_BASE - (level - 1) * 0.1);
+}
+
+const STREAK_MESSAGES = {
+  3: "Bien joué !",
+  5: "Beau rythme !",
+  8: "Excellent !",
+  12: "Implacable !",
+};
+
+// Message d'encouragement affiché à certains paliers de série de réussites.
+export function encouragementFor(streak) {
+  if (STREAK_MESSAGES[streak]) return STREAK_MESSAGES[streak];
+  if (streak > 12 && streak % 4 === 0) return "Extraordinaire !";
+  return null;
 }
 
 function randomPositions(count, cols = 3, rows = 3) {
@@ -53,6 +77,7 @@ function hitPosition(layout, x, y) {
 
 export function prepare(level, { container, onFinish }) {
   const mode = modeForLevel(level);
+  const responseWindow = windowForLevel(level);
 
   let finished = false;
   let trialIndex = 0;
@@ -69,6 +94,11 @@ export function prepare(level, { container, onFinish }) {
   let anticipations = 0;
   let layout = stageLayout({ width: 0, height: 0 });
   let flash = null;
+  let streak = 0;
+  let bestStreak = 0;
+  let toast = null;
+  let toastTimer = 0;
+  let pulse = 0;
 
   function snapshot() {
     return {
@@ -80,7 +110,14 @@ export function prepare(level, { container, onFinish }) {
       correct,
       total,
       anticipations,
+      streak,
+      bestStreak,
     };
+  }
+
+  function showToast(text) {
+    toast = text;
+    toastTimer = TOAST_DURATION;
   }
 
   function beginStimulus() {
@@ -90,6 +127,10 @@ export function prepare(level, { container, onFinish }) {
     phase = "stimulus";
     elapsed = 0;
     shownAt = clock();
+  }
+
+  function registerMiss() {
+    streak = 0;
   }
 
   function resolve(hitPos) {
@@ -102,8 +143,14 @@ export function prepare(level, { container, onFinish }) {
       correct += 1;
       rts.push(rt);
       flash = { pos: activePos, color: "correct" };
+      streak += 1;
+      if (streak > bestStreak) bestStreak = streak;
+      playTouch(getSettings().soundEnabled, streak);
+      const message = encouragementFor(streak);
+      if (message) showToast(message);
     } else {
       flash = { pos: hitPos, color: "wrong" };
+      registerMiss();
     }
 
     phase = "post";
@@ -127,7 +174,7 @@ export function prepare(level, { container, onFinish }) {
     if (finished) return;
     finished = true;
     const avgRt = rts.length ? Math.round(rts.reduce((a, b) => a + b, 0) / rts.length) : null;
-    onFinish({ avgRt, correct, total, mode, anticipations });
+    onFinish({ avgRt, correct, total, mode, anticipations, bestStreak });
   }
 
   function pressAt(x, y) {
@@ -151,6 +198,7 @@ export function prepare(level, { container, onFinish }) {
     anticipations += 1;
     total += 1;
     flash = { pos: pos >= 0 ? pos : activePos, color: "anticipation" };
+    registerMiss();
     phase = "post";
     timer = POST_TRIAL;
   }
@@ -170,15 +218,21 @@ export function prepare(level, { container, onFinish }) {
     },
     update(dt, { channel, gameClock }) {
       if (gameClock) clock = gameClock;
+      pulse += dt;
+      if (toastTimer > 0) {
+        toastTimer -= dt;
+        if (toastTimer <= 0) toast = null;
+      }
       if (!finished) {
         timer -= dt;
         if (phase === "delay") {
           if (timer <= 0) beginStimulus();
         } else if (phase === "stimulus") {
           elapsed = (clock() - shownAt) / 1000;
-          if (elapsed >= RESPONSE_WINDOW) {
+          if (elapsed >= responseWindow) {
             total += 1;
-            flash = null;
+            flash = { pos: activePos, color: "missed" };
+            registerMiss();
             phase = "post";
             timer = POST_TRIAL;
           }
@@ -202,20 +256,41 @@ export function prepare(level, { container, onFinish }) {
       ctx.textBaseline = "top";
       drawWrappedText(ctx, instruction, size.width / 2, 16, size.width * 0.92, 15, 20);
 
+      if (streak > 0) {
+        ctx.fillStyle = colors.accent;
+        ctx.font = "600 14px system-ui, sans-serif";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "top";
+        ctx.fillText(`Série : ${streak}`, size.width - 16, 16);
+      }
+
+      if (phase === "delay") {
+        const cx = size.width / 2;
+        const cy = layout.y + layout.h / 2;
+        const breathing = 0.5 + 0.5 * Math.sin(pulse * 2.2);
+        ctx.beginPath();
+        ctx.arc(cx, cy, layout.radius * (0.14 + breathing * 0.05), 0, Math.PI * 2);
+        ctx.fillStyle = colors.surface2;
+        ctx.globalAlpha = 0.6 + breathing * 0.4;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+
       const showTargets = phase === "stimulus" || phase === "post";
       if (showTargets && positions.length) {
+        const grow = phase === "stimulus" ? Math.min(1, Math.max(0.5, elapsed / 0.15)) : 1;
         for (const pos of positions) {
           const { cx, cy } = positionCenter(layout, pos);
           const isActive = pos === activePos;
           ctx.beginPath();
-          ctx.arc(cx, cy, layout.radius, 0, Math.PI * 2);
+          ctx.arc(cx, cy, layout.radius * grow, 0, Math.PI * 2);
           ctx.fillStyle = isActive ? colors.accent : colors.surface2;
           ctx.fill();
         }
         if (activePos >= 0) {
           const { cx, cy } = positionCenter(layout, activePos);
           ctx.beginPath();
-          ctx.arc(cx, cy, layout.radius * 1.18, 0, Math.PI * 2);
+          ctx.arc(cx, cy, layout.radius * grow * 1.18, 0, Math.PI * 2);
           ctx.lineWidth = 3;
           ctx.strokeStyle = colors.text;
           ctx.stroke();
@@ -224,11 +299,24 @@ export function prepare(level, { container, onFinish }) {
 
       if (flash && flash.pos >= 0) {
         const { cx, cy } = positionCenter(layout, flash.pos);
+        const flashColor =
+          flash.color === "correct" ? "#4caf50" : flash.color === "missed" ? colors.textDim : colors.danger;
         ctx.beginPath();
         ctx.arc(cx, cy, layout.radius * 1.05, 0, Math.PI * 2);
         ctx.lineWidth = 5;
-        ctx.strokeStyle = flash.color === "correct" ? "#4caf50" : colors.danger;
+        ctx.strokeStyle = flashColor;
         ctx.stroke();
+      }
+
+      if (toast) {
+        const alpha = Math.min(1, toastTimer / (TOAST_DURATION * 0.6));
+        ctx.globalAlpha = Math.max(0, alpha);
+        ctx.fillStyle = colors.accent;
+        ctx.font = "700 22px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(toast, size.width / 2, layout.y - 22);
+        ctx.globalAlpha = 1;
       }
 
       const progress = Math.min(trialIndex, TOTAL_TRIALS) / TOTAL_TRIALS;

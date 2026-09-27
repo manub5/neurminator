@@ -9,13 +9,18 @@ const suites = [
   ["nback", "./nback.spec.mjs"],
   ["stroop", "./stroop.spec.mjs"],
   ["reaction", "./reaction.spec.mjs"],
+  ["pairs", "./pairs.spec.mjs"],
+  ["gonogo", "./gonogo.spec.mjs"],
 ];
 
 async function main() {
   const port = 8127;
   const server = await serve(port);
   const baseUrl = `http://127.0.0.1:${port}`;
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    executablePath: process.env.PW_EXECUTABLE_PATH || undefined,
+  });
   const results = [];
 
   for (const [name, file] of suites) {

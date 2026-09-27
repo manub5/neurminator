@@ -35,9 +35,10 @@ export async function installAutoResponder(page, game) {
       const s = window.__cog.state();
       if (s) {
         window.__auto.ticks += 1;
-        if (g === "stroop" && s.phase === "stimulus") {
+        if (g === "stroop" && (s.phase === "stimulus" || s.phase === "recall")) {
           const order = ["rouge", "vert", "bleu", "jaune", "violet", "orange"];
-          const index = order.indexOf(s.ink);
+          const targetId = s.rule === "word" ? s.wordColorId : s.ink;
+          const index = order.indexOf(targetId);
           if (index >= 0) window.__cog.submit({ index });
         } else if (g === "nback" && s.phase === "show" && s.target) {
           window.__cog.submit({ kind: "press" });
@@ -45,6 +46,20 @@ export async function installAutoResponder(page, game) {
           window.__cog.submit({ index: s.activePos });
         } else if (g === "span" && s.phase === "answer") {
           for (const index of s.sequence) window.__cog.submit({ index });
+        } else if (g === "gonogo" && s.phase === "stimulus" && s.isGo) {
+          window.__cog.submit({ kind: "press" });
+        } else if (g === "pairs" && s.phase === "playing") {
+          const pendingIndex = s.revealed.findIndex((r, i) => r && !s.matched[i]);
+          let target = -1;
+          if (pendingIndex >= 0) {
+            const symbol = s.deck[pendingIndex];
+            target = s.deck.findIndex(
+              (sym, i) => sym === symbol && i !== pendingIndex && !s.matched[i] && !s.revealed[i]
+            );
+          } else {
+            target = s.deck.findIndex((sym, i) => !s.matched[i] && !s.revealed[i]);
+          }
+          if (target >= 0) window.__cog.submit({ index: target });
         }
       }
       if (!window.__auto.stop) requestAnimationFrame(respond);
@@ -59,7 +74,13 @@ export async function stopAutoResponder(page) {
   });
 }
 
+export async function dismissOverlay(page) {
+  const overlay = await page.$(".achievement-overlay");
+  if (overlay) await overlay.click();
+}
+
 export async function gotoHistory(page) {
+  await dismissOverlay(page);
   await page.getByRole("button", { name: "Accueil", exact: true }).click();
   await page.getByRole("button", { name: "Historique", exact: true }).click();
   await page.waitForSelector(".history-entry");

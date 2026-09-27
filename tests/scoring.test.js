@@ -50,4 +50,23 @@ export function register({ suite, test }) {
       assertEqual(r.score, 0);
     });
   });
+
+  suite("scoring: pairs/gonogo", () => {
+    test("pairs = matches/attempts", () => {
+      const r = scoring.normalize("pairs", { pairs: 4, attempts: 5, matches: 4 });
+      assertEqual(r.score, 0.8);
+      assertEqual(r.higherIsBetter, true);
+    });
+
+    test("pairs attempts 0 ne divise pas par zéro", () => {
+      const r = scoring.normalize("pairs", { pairs: 0, attempts: 0, matches: 0 });
+      assertEqual(r.score, 0);
+    });
+
+    test("gonogo = correct/total", () => {
+      const r = scoring.normalize("gonogo", { correct: 20, total: 25 });
+      assertEqual(r.score, 0.8);
+      assertEqual(r.higherIsBetter, true);
+    });
+  });
 }

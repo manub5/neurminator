@@ -5,6 +5,7 @@ import {
   saveGames,
 } from "../storage/local.js";
 import { setTheme } from "../theme.js";
+import { playClick } from "../sound.js";
 
 export const meta = { title: "Réglages", nav: true };
 
@@ -15,12 +16,13 @@ function card() {
 }
 
 export function render(container) {
+  container.innerHTML = "";
   const settings = getSettings();
 
   const themeCard = card();
   const themeTitle = document.createElement("p");
   themeTitle.className = "settings-title";
-  themeTitle.textContent = "Thème";
+  themeTitle.textContent = "🎨 Thème";
   themeCard.appendChild(themeTitle);
 
   const themeOptions = document.createElement("div");
@@ -32,6 +34,7 @@ export function render(container) {
       value === "auto" ? "Auto" : value === "light" ? "Clair" : "Sombre";
     btn.setAttribute("aria-pressed", settings.theme === value ? "true" : "false");
     btn.addEventListener("click", () => {
+      playClick(settings.soundEnabled);
       setTheme(value);
       render(container);
     });
@@ -44,7 +47,7 @@ export function render(container) {
   const soundLabel = document.createElement("label");
   soundLabel.className = "settings-row";
   const soundText = document.createElement("span");
-  soundText.textContent = "Son en fin de partie";
+  soundText.textContent = "🔊 Sons de l'application";
   const toggle = document.createElement("input");
   toggle.type = "checkbox";
   toggle.checked = settings.soundEnabled;
@@ -52,6 +55,7 @@ export function render(container) {
     const s = getSettings();
     s.soundEnabled = toggle.checked;
     saveSettings(s);
+    playClick(s.soundEnabled);
   });
   soundLabel.append(soundText, toggle);
   soundCard.appendChild(soundLabel);
@@ -61,7 +65,7 @@ export function render(container) {
   const clearBtn = document.createElement("button");
   clearBtn.type = "button";
   clearBtn.className = "danger";
-  clearBtn.textContent = "Effacer l'historique";
+  clearBtn.textContent = "🗑️ Effacer l'historique";
   clearBtn.addEventListener("click", () => {
     if (!confirm("Effacer tout l'historique et remettre les niveaux à 1 ?")) return;
     clearHistory();
@@ -74,7 +78,7 @@ export function render(container) {
   const iosCard = card();
   const details = document.createElement("details");
   const summary = document.createElement("summary");
-  summary.textContent = "Installer sur l'écran d'accueil (iOS)";
+  summary.textContent = "📲 Installer sur l'écran d'accueil (iOS)";
   const steps = document.createElement("p");
   steps.className = "settings-help";
   steps.textContent =

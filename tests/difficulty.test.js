@@ -47,8 +47,11 @@ export function register({ suite, test }) {
     test("3 scores ≥ 0.85 → montée", () => {
       assertEqual(difficulty.nextLevel("nback", 2, [0.9, 0.9, 0.9]), 3);
     });
-    test("3 scores faibles → descente", () => {
-      assertEqual(difficulty.nextLevel("nback", 2, [0.5, 0.5, 0.5]), 1);
+    test("3 scores faibles → descente plafonnée au plancher 2", () => {
+      assertEqual(difficulty.nextLevel("nback", 2, [0.5, 0.5, 0.5]), 2);
+    });
+    test("3 scores faibles à un niveau supérieur → descente d'un cran", () => {
+      assertEqual(difficulty.nextLevel("nback", 3, [0.5, 0.5, 0.5]), 2);
     });
     test("plafond nback à 5", () => {
       assertEqual(difficulty.nextLevel("nback", 5, [0.99, 0.99]), 5);
@@ -70,6 +73,27 @@ export function register({ suite, test }) {
     });
     test("score 0 (aucun correct) → descente", () => {
       assertEqual(difficulty.nextLevel("reaction", 2, [0, 0, 0]), 1);
+    });
+  });
+
+  suite("difficulty: pairs", () => {
+    test("3 scores ≥ 0.75 → montée", () => {
+      assertEqual(difficulty.nextLevel("pairs", 1, [0.8, 0.9, 1]), 2);
+    });
+    test("plafond pairs à 5", () => {
+      assertEqual(difficulty.nextLevel("pairs", 5, [1, 1, 1]), 5);
+    });
+  });
+
+  suite("difficulty: gonogo", () => {
+    test("3 scores ≥ 0.85 → montée", () => {
+      assertEqual(difficulty.nextLevel("gonogo", 1, [0.9, 0.9, 0.9]), 2);
+    });
+    test("3 scores faibles → descente plafonnée au plancher 1", () => {
+      assertEqual(difficulty.nextLevel("gonogo", 2, [0.4, 0.4, 0.4]), 1);
+    });
+    test("plafond gonogo à 9 (la difficulté n'évolue plus au-delà)", () => {
+      assertEqual(difficulty.nextLevel("gonogo", 9, [0.99, 0.99]), 9);
     });
   });
 }

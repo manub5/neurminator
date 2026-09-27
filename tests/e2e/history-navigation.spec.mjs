@@ -13,7 +13,14 @@ export async function run({ page, baseUrl, results }) {
   await record("le retour met chaque partie en pause puis revient à l'accueil", async () => {
     await page.goto(appUrl(baseUrl));
 
-    for (const gameName of ["Span de mémoire", "N-back", "Stroop", "Temps de réaction"]) {
+    for (const gameName of [
+      "Span de mémoire",
+      "N-back",
+      "Stroop",
+      "Temps de réaction",
+      "Paires",
+      "Go/No-Go",
+    ]) {
       await page.getByRole("button", { name: gameName }).click();
       await page.waitForFunction(() => window.__cog && window.__cog.state() !== null);
 

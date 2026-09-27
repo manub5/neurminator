@@ -18,6 +18,10 @@
     import { register as registerNback } from "./nback.test.js";
     import { register as registerGames } from "./games.test.js";
     import { register as registerSound } from "./sound.test.js";
+    import { register as registerReaction } from "./reaction.test.js";
+    import { register as registerStroop } from "./stroop.test.js";
+    import { register as registerPairs } from "./pairs.test.js";
+    import { register as registerGonogo } from "./gonogo.test.js";
 
     const runner = createRunner();
     registerStorage(runner);
@@ -29,6 +33,10 @@
     registerNback(runner);
     registerGames(runner);
     registerSound(runner);
+    registerReaction(runner);
+    registerStroop(runner);
+    registerPairs(runner);
+    registerGonogo(runner);
     runner.render(document.getElementById("tests"));
   </script>
 </body>

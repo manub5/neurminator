@@ -1,6 +1,8 @@
 import { mountGame } from "../engine/canvas-game.js";
-import { roundRect, themeColors, drawWrappedText } from "../engine/render.js";
+import { roundRect, themeColors, drawWrappedText, wrapLines } from "../engine/render.js";
 import { keyboardIndexFromCode } from "../engine/input.js";
+import { playNotice } from "../sound.js";
+import { getSettings } from "../storage/local.js";
 
 const COLORS = [
   { id: "rouge", label: "Rouge", css: "#ff5c5c" },
@@ -12,6 +14,13 @@ const COLORS = [
 ];
 const TOTAL_TRIALS = 24;
 const PAD_COLS = 3;
+
+// La règle alterne toutes les RULE_SWITCH_INTERVAL réponses : encre, puis mot, etc.
+const RULE_SWITCH_INTERVAL = 6;
+const RULE_BANNER_DURATION = 1.6;
+const PEEK_DURATION = 0.85;
+const CLASSIC_FEEDBACK_DURATION = 0.25;
+const RECALL_FEEDBACK_DURATION = 0.3;
 
 function incongruentRatio(level) {
   if (level <= 1) return 0.5;
@@ -30,6 +39,7 @@ export function buildTrial(incongruent) {
   }
   return {
     word: COLORS[wordIndex].label.toUpperCase(),
+    wordColorId: COLORS[wordIndex].id,
     ink: COLORS[inkIndex],
     incongruent,
   };
@@ -41,6 +51,27 @@ export function incongruentRatioForLevel(level) {
 
 export function colorCount() {
   return COLORS.length;
+}
+
+// "ink" : nommer la couleur de l'encre. "word" : nommer la couleur du mot lu.
+export function ruleForTrial(trialIndex) {
+  return Math.floor(trialIndex / RULE_SWITCH_INTERVAL) % 2 === 0 ? "ink" : "word";
+}
+
+export function targetIdFor(trial, rule) {
+  return rule === "word" ? trial.wordColorId : trial.ink.id;
+}
+
+// À partir du niveau 2, plusieurs stimuli s'enchaînent et se répondent de
+// mémoire d'affilée, comme les séquences du span de mémoire.
+export function burstSizeForLevel(level) {
+  if (level <= 1) return 1;
+  if (level <= 2) return 2;
+  return 3;
+}
+
+function trialsLeftInRuleBlock(trialIndex) {
+  return RULE_SWITCH_INTERVAL - (trialIndex % RULE_SWITCH_INTERVAL);
 }
 
 function padLayout(size) {
@@ -76,17 +107,85 @@ function zoneAtPoint(items, x, y) {
 
 export function prepare(level, { container, onFinish }) {
   const ratio = incongruentRatio(level);
+  const maxBurst = burstSizeForLevel(level);
 
   let finished = false;
   let trialIndex = 0;
-  let trial = buildTrial(Math.random() < ratio);
-  let chosenId = null;
-  let feedbackTimer = 0;
   let correct = 0;
   let total = 0;
   let congruent = 0;
   let incongruent = 0;
   let items = [];
+
+  let rule = "ink";
+  let lastAnnouncedRule = null;
+
+  let burst = [];
+  let burstPos = 0;
+  let mode = "classic";
+
+  let phase = "rule";
+  let timer = 0;
+  let chosenId = null;
+  let feedbackTimer = 0;
+
+  function currentTarget() {
+    return burst[burstPos] ?? null;
+  }
+
+  function enterPresentation() {
+    chosenId = null;
+    burstPos = 0;
+    if (mode === "classic") {
+      phase = "stimulus";
+    } else {
+      phase = "peek";
+      timer = PEEK_DURATION;
+    }
+  }
+
+  function startRound() {
+    const remaining = TOTAL_TRIALS - trialIndex;
+    if (remaining <= 0) {
+      finish();
+      return;
+    }
+    rule = ruleForTrial(trialIndex);
+    const size = Math.min(maxBurst, trialsLeftInRuleBlock(trialIndex), remaining);
+    burst = Array.from({ length: size }, () => buildTrial(Math.random() < ratio));
+    burstPos = 0;
+    mode = size > 1 ? "memory" : "classic";
+
+    if (rule !== lastAnnouncedRule) {
+      lastAnnouncedRule = rule;
+      phase = "rule";
+      timer = RULE_BANNER_DURATION;
+      playNotice(getSettings().soundEnabled);
+      return;
+    }
+    enterPresentation();
+  }
+
+  function advancePeek() {
+    burstPos += 1;
+    if (burstPos >= burst.length) {
+      burstPos = 0;
+      phase = "recall";
+      chosenId = null;
+    } else {
+      timer = PEEK_DURATION;
+    }
+  }
+
+  function afterFeedback() {
+    if (mode === "memory" && burstPos + 1 < burst.length) {
+      burstPos += 1;
+      chosenId = null;
+      phase = "recall";
+      return;
+    }
+    startRound();
+  }
 
   function finish() {
     if (finished) return;
@@ -95,12 +194,19 @@ export function prepare(level, { container, onFinish }) {
   }
 
   function snapshot() {
+    const target = currentTarget();
+    const visiblePhase =
+      phase === "rule" ? "rule" : phase === "peek" ? "peek" : feedbackTimer > 0 ? "feedback" : phase;
     return {
-      phase: feedbackTimer > 0 ? "feedback" : "stimulus",
+      phase: visiblePhase,
+      rule,
       trialIndex,
-      word: trial.word,
-      ink: trial.ink.id,
-      incongruent: trial.incongruent,
+      burstSize: burst.length,
+      burstIndex: burstPos,
+      word: target ? target.word : "",
+      wordColorId: target ? target.wordColorId : null,
+      ink: target ? target.ink.id : null,
+      incongruent: target ? target.incongruent : false,
       chosenId,
       correct,
       total,
@@ -108,24 +214,20 @@ export function prepare(level, { container, onFinish }) {
   }
 
   function choose(index) {
-    if (finished || chosenId !== null || !Number.isInteger(index) || index < 0 || index >= COLORS.length) return;
+    if (finished || chosenId !== null) return;
+    if (!Number.isInteger(index) || index < 0 || index >= COLORS.length) return;
+    if (phase !== "stimulus" && phase !== "recall") return;
+    const target = currentTarget();
+    if (!target) return;
+
     const id = COLORS[index].id;
     chosenId = id;
-    if (id === trial.ink.id) correct += 1;
-    if (trial.incongruent) incongruent += 1;
+    if (id === targetIdFor(target, rule)) correct += 1;
+    if (target.incongruent) incongruent += 1;
     else congruent += 1;
     total += 1;
-    feedbackTimer = 0.25;
-  }
-
-  function nextTrial() {
     trialIndex += 1;
-    if (trialIndex >= TOTAL_TRIALS) {
-      finish();
-      return;
-    }
-    trial = buildTrial(Math.random() < ratio);
-    chosenId = null;
+    feedbackTimer = mode === "classic" ? CLASSIC_FEEDBACK_DURATION : RECALL_FEEDBACK_DURATION;
   }
 
   const scene = {
@@ -137,9 +239,17 @@ export function prepare(level, { container, onFinish }) {
       choose(zoneAtPoint(items, x, y));
     },
     update(dt, { channel }) {
-      if (feedbackTimer > 0) {
-        feedbackTimer -= dt;
-        if (feedbackTimer <= 0) nextTrial();
+      if (!finished) {
+        if (phase === "rule") {
+          timer -= dt;
+          if (timer <= 0) enterPresentation();
+        } else if (phase === "peek") {
+          timer -= dt;
+          if (timer <= 0) advancePeek();
+        } else if (feedbackTimer > 0) {
+          feedbackTimer -= dt;
+          if (feedbackTimer <= 0) afterFeedback();
+        }
       }
       if (channel) channel.setSnapshot(snapshot());
     },
@@ -148,21 +258,70 @@ export function prepare(level, { container, onFinish }) {
       ctx.fillStyle = colors.background;
       ctx.fillRect(0, 0, size.width, size.height);
 
-      const instruction = "Choisissez la COULEUR DE L'ENCRE (pas le mot lu).";
+      if (phase === "rule") {
+        ctx.fillStyle = colors.textDim;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.font = "600 15px system-ui, sans-serif";
+        ctx.fillText("🔄 Nouvelle règle", size.width / 2, size.height * 0.36);
+
+        const label =
+          rule === "word"
+            ? "Choisissez la couleur DU MOT écrit"
+            : "Choisissez la couleur DE L'ENCRE";
+        ctx.fillStyle = colors.accent;
+        ctx.font = "700 26px system-ui, sans-serif";
+        const lines = wrapLines(ctx, label, size.width * 0.82);
+        lines.forEach((line, i) => {
+          ctx.fillText(line, size.width / 2, size.height * 0.36 + 42 + i * 32);
+        });
+
+        ctx.textAlign = "left";
+        ctx.textBaseline = "alphabetic";
+        return;
+      }
+
+      const instruction =
+        rule === "word"
+          ? "Choisissez la couleur DU MOT écrit (pas l'encre)."
+          : "Choisissez la couleur DE L'ENCRE (pas le mot lu).";
       ctx.fillStyle = colors.textDim;
       ctx.textAlign = "center";
       ctx.textBaseline = "top";
       drawWrappedText(ctx, instruction, size.width / 2, 16, size.width * 0.92, 15, 20);
 
+      if (mode === "memory") {
+        const label =
+          phase === "peek"
+            ? `👀 Mémorisez : ${burstPos + 1}/${burst.length}`
+            : `🧠 Réponse ${burstPos + 1}/${burst.length}`;
+        ctx.fillStyle = colors.textDim;
+        ctx.font = "600 13px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.fillText(label, size.width / 2, 56);
+      }
+
       const layout = padLayout(size);
       items = layout.items;
 
-      const wordSize = Math.min(size.width * 0.22, (layout.top - 90) * 0.7, 96);
-      ctx.fillStyle = trial.ink.css;
-      ctx.font = `700 ${wordSize}px system-ui, sans-serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(trial.word, size.width / 2, layout.top / 2 + 10);
+      const target = currentTarget();
+      const showWord = target && (phase === "stimulus" || phase === "peek");
+
+      if (showWord) {
+        const wordSize = Math.min(size.width * 0.22, (layout.top - 90) * 0.7, 96);
+        ctx.fillStyle = target.ink.css;
+        ctx.font = `700 ${wordSize}px system-ui, sans-serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(target.word, size.width / 2, layout.top / 2 + 10);
+      } else if (phase === "recall") {
+        ctx.fillStyle = colors.textDim;
+        ctx.font = "600 18px system-ui, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("De mémoire…", size.width / 2, layout.top / 2 + 10);
+      }
 
       for (let i = 0; i < items.length; i++) {
         const it = items[i];
@@ -192,6 +351,7 @@ export function prepare(level, { container, onFinish }) {
     },
   };
 
+  startRound();
   const game = mountGame(container, { gameId: "stroop", scene, describe: "Stroop" });
 
   if (game.channel) {

@@ -65,6 +65,45 @@
   margin: 8px 0 16px;
 }
 
+.achievement-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  animation: achievement-fade 0.2s ease;
+  cursor: pointer;
+}
+
+.achievement-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  max-width: 320px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  animation: achievement-pop 0.25s ease;
+}
+
+.achievement-emoji { font-size: 3rem; line-height: 1; margin-bottom: 8px; }
+.achievement-title { font-size: 1.3rem; font-weight: 700; color: var(--accent); margin: 0 0 8px; }
+.achievement-message { color: var(--text); margin: 0 0 16px; }
+.achievement-hint { color: var(--text-dim); font-size: 0.85rem; margin: 0; }
+
+@keyframes achievement-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes achievement-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 .summary-card { margin-bottom: 12px; }
 .summary-header {
   display: flex;

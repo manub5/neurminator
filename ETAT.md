@@ -1,6 +1,6 @@
 # neurminator — État du projet
 
-Dernière mise à jour : 2026-09-15
+Dernière mise à jour : 2026-09-27
 
 ## Où en est le projet
 
@@ -8,9 +8,9 @@ PWA d'entraînement cognitif **complète et déployée**.
 
 - **En ligne** : https://manub5.github.io/neurminator/
 - **Dépôt** : https://github.com/manub5/neurminator (public, branche `master`)
-- **Cache service worker** : `v6`
-- **Tests logique pure** : 67 réussis, 0 échoués (`tests/run.html`)
-- **Tests e2e Playwright** : 21 réussis, 0 échoués (`npm run test:e2e`)
+- **Cache service worker** : `v8`
+- **Tests logique pure** : 114 réussis, 0 échoués (`tests/run.html`)
+- **Tests e2e Playwright** : 35 réussis, 0 échoués (`npm run test:e2e`)
 
 ## Paliers terminés
 
@@ -20,7 +20,36 @@ PWA d'entraînement cognitif **complète et déployée**.
 | C | Span de mémoire (auto-validation) | Terminé, déployé |
 | D | N-back, Stroop, Temps de réaction | Terminé, déployé |
 | E | Finitions : thème, son, effacer historique, encart iOS, tendance + sparkline | Terminé, déployé |
-| F | Rendu Canvas 2D de tous les jeux + moteur + suites Playwright | Terminé |
+| F | Rendu Canvas 2D de tous les jeux + moteur + suites Playwright | Terminé, déployé |
+| G | Corrections + engagement (sons, encarts, règles Stroop, 2 nouveaux jeux) | Terminé |
+
+## Palier G — Corrections et engagement (2026-09-27)
+
+- **Bug réglages** : le menu thème se dédoublait à chaque clic (`container.innerHTML`
+  jamais vidé avant un nouveau rendu) ; corrigé.
+- **N-back** : commence désormais au palier 2 (au lieu de 1) et ne redescend plus
+  en dessous (plancher par jeu dans `core/difficulty.js`, `minLevelFor`).
+- **Réaction** : fenêtre de réponse qui se resserre avec le niveau (au-delà du
+  plafond de nombre de balles), série de réussites affichée, messages
+  d'encouragement, retour sonore à chaque bonne réponse, halo pour un essai raté.
+- **Span** : note douce (pentatonique) à chaque case touchée.
+- **Stroop** : la règle alterne « couleur de l'encre » / « couleur du mot lu »
+  toutes les 6 réponses, avec un bandeau annonçant clairement le changement ; à
+  partir du niveau 2, les stimuli s'enchaînent par séries et se répondent de
+  mémoire d'affilée (comme le span).
+- **Sons doux** partout : sélection de menu, choix d'un jeu, passage de palier,
+  nouveau record (`js/sound.js` : `playClick`, `playTouch`, `playLevelUp`,
+  `playVictory`, `playNotice`).
+- **Encarts de victoire/palier** : message plein écran à la fin d'une partie en
+  cas de record ou de passage de niveau, qui se ferme au toucher (`js/ui/overlay.js`).
+- **Emojis légers** : un emoji par jeu (accueil, historique, écran de résultat),
+  icônes dans les réglages — glyphes Unicode natifs, zéro asset externe.
+- **2 nouveaux jeux** inspirés de la littérature/de jeux connus :
+  - **Paires** (`js/games/pairs.js`) — jeu de concentration/mémoire visuelle,
+    paires d'emojis à retrouver, difficulté = nombre de paires (4 à 12).
+  - **Go/No-Go** (`js/games/gonogo.js`) — tâche classique d'attention/inhibition
+    (utilisée en neuropsychologie), difficulté = fréquence des signaux « stop »
+    et vitesse de présentation.
 
 ## Palier F — Canvas 2D (2026-09-15)
 
@@ -54,7 +83,8 @@ js/     app.js, router.js, theme.js, sound.js
 js/engine/     loop.js, render.js, input.js, scene.js, canvas-game.js
 js/core/       scoring.js, difficulty.js, history.js, sequence.js  (logique pure, testée)
 js/storage/    local.js
-js/games/      index.js, span.js, nback.js, stroop.js, reaction.js
+js/games/      index.js, span.js, nback.js, stroop.js, reaction.js, pairs.js, gonogo.js
+js/ui/         overlay.js  (encart de victoire/palier)
 js/views/      home.js, game.js, history.js, settings.js
 tests/         run.html, harness.js, *.test.js
 tests/e2e/     run.mjs, helpers.mjs, *.spec.mjs  (Playwright)

@@ -25,14 +25,25 @@ export async function run({ page, baseUrl, results }) {
     }
   });
 
-  await record("répondre la couleur de l'encre donne un score parfait", async () => {
+  await record("la règle change en cours de partie", async () => {
+    const initialRule = (await state(page)).rule;
     await installAutoResponder(page, "stroop");
+    await page.waitForFunction(
+      (initial) => window.__cog && window.__cog.state() && window.__cog.state().rule !== initial,
+      initialRule,
+      { timeout: 20000 }
+    );
+    const afterSwitch = await state(page);
+    assert(afterSwitch.rule !== initialRule, "la règle n'a pas changé");
+  });
+
+  await record("répondre selon la règle affichée donne un score quasi parfait", async () => {
     await page.waitForSelector(".result-card", { timeout: 30000 });
     await stopAutoResponder(page);
     const value = await page.textContent(".result-value");
     assert(value && value.endsWith("%"), `score inattendu: ${value}`);
     const numeric = Number(String(value).replace(/%/g, ""));
-    assert(numeric > 0.9, `score trop faible pour un auto-répondeur correct: ${value}`);
+    assert(numeric > 90, `score trop faible pour un auto-répondeur qui suit la règle: ${value}`);
   });
 
   await record("la partie est enregistrée dans l'historique", async () => {

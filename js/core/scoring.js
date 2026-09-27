@@ -15,6 +15,14 @@ const RULES = {
     extractScore: (raw) => (raw.avgRt == null ? null : raw.avgRt),
     higherIsBetter: false,
   },
+  pairs: {
+    extractScore: (raw) => (raw.attempts > 0 ? raw.matches / raw.attempts : 0),
+    higherIsBetter: true,
+  },
+  gonogo: {
+    extractScore: (raw) => (raw.total > 0 ? raw.correct / raw.total : 0),
+    higherIsBetter: true,
+  },
 };
 
 export function normalize(gameId, raw) {

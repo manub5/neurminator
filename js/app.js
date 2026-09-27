@@ -4,6 +4,8 @@ import * as home from "./views/home.js";
 import * as game from "./views/game.js";
 import * as history from "./views/history.js";
 import * as settings from "./views/settings.js";
+import { playClick } from "./sound.js";
+import { getSettings } from "./storage/local.js";
 
 const routes = [
   { path: "home", ...home },
@@ -29,7 +31,10 @@ const router = createRouter({
       const btn = document.createElement("button");
       btn.textContent = r.meta.title;
       btn.setAttribute("aria-current", r.path === path ? "page" : "false");
-      btn.addEventListener("click", () => router.navigate(r.path));
+      btn.addEventListener("click", () => {
+        if (r.path !== path) playClick(getSettings().soundEnabled);
+        router.navigate(r.path);
+      });
       nav.appendChild(btn);
     }
   },

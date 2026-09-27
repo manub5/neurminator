@@ -2,6 +2,8 @@ import { mountGame } from "../engine/canvas-game.js";
 import { roundRect, themeColors, fitText } from "../engine/render.js";
 import { keyboardIndexFromCode } from "../engine/input.js";
 import { randomSequence, isSequenceCorrect, GRID_SIZE } from "../core/sequence.js";
+import { playTouch } from "../sound.js";
+import { getSettings } from "../storage/local.js";
 
 const COLS = 3;
 const ROWS = 3;
@@ -103,6 +105,7 @@ export function prepare(level, { container, onFinish }) {
     picks.push(index);
     highlight = index;
     highlightTimer = 0.15;
+    playTouch(getSettings().soundEnabled, index);
     if (picks.length >= sequence.length) {
       allowInput = false;
       const correct = isSequenceCorrect(sequence, picks);

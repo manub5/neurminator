@@ -1,5 +1,5 @@
 import { getHistory } from "../storage/local.js";
-import { GAMES, getGame, formatScore } from "../games/index.js";
+import { GAMES, getGame, formatScore, displayName } from "../games/index.js";
 import { groupByDay, seriesForGame, trendForGame } from "../core/history.js";
 
 export const meta = { title: "Historique", nav: true };
@@ -49,7 +49,7 @@ function gameSummary(history, game) {
   header.className = "summary-header";
   const name = document.createElement("span");
   name.className = "summary-name";
-  name.textContent = game.name;
+  name.textContent = displayName(game);
   const count = document.createElement("span");
   count.className = "game-card__meta";
   count.textContent = `${series.length} partie(s)`;
@@ -94,7 +94,7 @@ export function render(container) {
       const game = getGame(entry.game);
       const card = document.createElement("div");
       card.className = "card history-entry";
-      const name = game ? game.name : entry.game;
+      const name = game ? displayName(game) : entry.game;
       const time = new Date(entry.date).toLocaleTimeString("fr-FR", {
         hour: "2-digit",
         minute: "2-digit",
